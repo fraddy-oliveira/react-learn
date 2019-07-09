@@ -19,6 +19,59 @@ class Board extends React.Component {
 
     constructor(props) {
         super(props)
+    }
+
+    renderSquare(i) {
+        return (
+            <Square
+                box_value={this.props.squares[i]}
+                squareClick={() => this.props.onSquareClick(i)} />
+        )
+    }
+
+    render() {
+
+
+        return (
+            <div>
+                <div className="board-row">
+                    {this.renderSquare(0)}
+                    {this.renderSquare(1)}
+                    {this.renderSquare(2)}
+                </div>
+                <div className="board-row">
+                    {this.renderSquare(3)}
+                    {this.renderSquare(4)}
+                    {this.renderSquare(5)}
+                </div>
+                <div className="board-row">
+                    {this.renderSquare(6)}
+                    {this.renderSquare(7)}
+                    {this.renderSquare(8)}
+                </div>
+            </div>
+        );
+    }
+}
+
+class Author extends React.Component {
+    constructor(props) {
+        super(props)
+        this.name = "Fraddy"
+    }
+    render() {
+        this.name = "Fraddy Oliveira"
+        return (
+            <div>
+                Name:{this.name}
+            </div>
+        );
+    }
+}
+
+class Game extends React.Component {
+    constructor(props) {
+        super(props)
         this.players = { "one": { "name": "Player X", "value": "X" }, "two": { "name": "Player O", "value": "O" } }
         this.winnerCoordinates = [
             [0, 1, 2],
@@ -38,7 +91,15 @@ class Board extends React.Component {
             "isGameEnded": false
         }
     }
-
+    resetGame() {
+        this.setState({
+            squares: Array(9).fill(null),
+            currentPlayer: this.players.one,
+            isWinnerDecided: false,
+            winner: null,
+            isGameEnded: false
+        })
+    }
     squareClick(box_index) {
         const squares = this.state.squares
         let winner = null
@@ -98,27 +159,8 @@ class Board extends React.Component {
         }
         return winnerPlayer
     }
-
-    resetGame() {
-        this.setState({
-            squares: Array(9).fill(null),
-            currentPlayer: this.players.one,
-            isWinnerDecided: false,
-            winner: null,
-            isGameEnded: false
-        })
-    }
-
-    renderSquare(i) {
-        return (
-            <Square
-                box_value={this.state.squares[i]}
-                squareClick={() => this.squareClick(i)} />
-        )
-    }
-
     render() {
-        let status = "Current player: " + this.state.currentPlayer.name;
+        let status = "Next player: " + this.state.currentPlayer.name;
         let gameResult = "";
 
         if (this.state.isGameEnded || this.state.isWinnerDecided) {
@@ -128,63 +170,23 @@ class Board extends React.Component {
             if (this.state.isWinnerDecided && this.state.winner) {
                 gameResult = "Winner: " + this.state.winner;
             }
-            status = ""
+            //status = ""
         }
-
-
-        return (
-            <div>
-                <div className="status">{status}</div>
-                <div className="">{gameResult}</div>
-                <button onClick={() => this.resetGame()}>Reset Game</button>
-                <div className="board-row">
-                    {this.renderSquare(0)}
-                    {this.renderSquare(1)}
-                    {this.renderSquare(2)}
-                </div>
-                <div className="board-row">
-                    {this.renderSquare(3)}
-                    {this.renderSquare(4)}
-                    {this.renderSquare(5)}
-                </div>
-                <div className="board-row">
-                    {this.renderSquare(6)}
-                    {this.renderSquare(7)}
-                    {this.renderSquare(8)}
-                </div>
-            </div>
-        );
-    }
-}
-
-class Author extends React.Component {
-    constructor(props) {
-        super(props)
-        this.name = "Fraddy"
-    }
-    render() {
-        this.name = "Fraddy Oliveira"
-        return (
-            <div>
-                Name:{this.name}
-            </div>
-        );
-    }
-}
-
-class Game extends React.Component {
-    render() {
         return (
             <div className="game">
                 <div className="game-board">
-                    <Board />
+                    <Board currentPlayer={this.state.currentPlayer} isGameEnded={this.state.isGameEnded} isWinnerDecided={this.state.isWinnerDecided} winner={this.state.winner} squares={this.state.squares} onSquareClick={(i) => this.squareClick(i)} />
                 </div>
                 <div className="game-info">
-                    <div>{/* status */}</div>
-                    <ol>{/* TODO */}</ol>
+                    <div>{status}</div>
+                    <div>{gameResult}</div>
+                    <button onClick={() => this.resetGame()}>Reset Game</button>
                 </div>
                 <div className="author-info">
-                    <Author />
+
+                </div>
+                <div className="time-travel">
+
                 </div>
             </div>
         );
