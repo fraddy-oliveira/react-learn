@@ -30,8 +30,6 @@ class Board extends React.Component {
     }
 
     render() {
-
-
         return (
             <div>
                 <div className="board-row">
@@ -83,46 +81,40 @@ class Game extends React.Component {
             [0, 4, 8],
             [2, 4, 6]
         ];
-        this.state = {
-            "squares": Array(9).fill(null),
+        this.app_initial_state = {
+            "history": [{ squares: Array(9).fill(null) }],
             "currentPlayer": this.players.one,
-            "isWinnerDecided": false,
-            "winner": null,
-            "isGameEnded": false
+            "stepPointer": 0
         }
+
+        this.state = this.app_initial_state
     }
+
     resetGame() {
-        this.setState({
-            squares: Array(9).fill(null),
-            currentPlayer: this.players.one,
-            isWinnerDecided: false,
-            winner: null,
-            isGameEnded: false
-        })
+        this.setState(this.app_initial_state)
     }
+
     squareClick(box_index) {
-        const squares = this.state.squares
-        let winner = null
-        if (!this.state.isWinnerDecided) {
-            if (squares[box_index] === null) {
-                squares[box_index] = this.state.currentPlayer.value
-                this.setState({ squares: squares })
-                this.switchPlayer()
-            } else {
-                console.log("square already filled for index:" + box_index)
-            }
-            if (this.isAllSquaresFilled()) {
-                this.setState({ "isGameEnded": true })
-            }
-            if (this.isWinnerDecided()) {
-                winner = this.getWinner(this.state.squares)
-                this.setState({ "isWinnerDecided": true, "winner": winner.name })
-            }
+        let history = this.state.history.slice(0, this.state.stepPointer + 1)
+
+        let current_step = history[history.length - 1]
+
+        const squares = current_step.squares.slice()
+
+        if (Array.isArray(squares) && (this.isWinnerDecided(squares) || squares[box_index])) {
+            return;
+        }
+        if (squares[box_index] === null) {
+            squares[box_index] = this.state.currentPlayer.value
+            this.setState({ history: history.concat([{ squares: squares }]), stepPointer: history.length })
+            this.switchPlayer()
+        } else {
+            console.log("square already filled for index:" + box_index)
         }
     }
 
     switchPlayer() {
-        let currentPlayer = this.state.currentPlayer
+        let currentPlayer = Object.assign({}, this.state.currentPlayer)
         if (currentPlayer.value === "X") {
             currentPlayer = this.players.two
         } else {
@@ -131,16 +123,17 @@ class Game extends React.Component {
         this.setState({ currentPlayer: currentPlayer })
     }
 
-    isAllSquaresFilled() {
+    isAllSquaresFilled(square) {
         let allSquaresFilled = false
-        if (!this.state.squares.includes(null)) {
+        if (Array.isArray(square) && !square.includes(null)) {
             allSquaresFilled = true
         }
         return allSquaresFilled
     }
 
-    isWinnerDecided() {
-        let winnerPlayer = this.getWinner(this.state.squares)
+    isWinnerDecided(square) {
+        let winnerPlayer = null
+        winnerPlayer = Array.isArray(square) ? this.getWinner(square) : null
         return winnerPlayer != null ? true : false
     }
 
@@ -159,35 +152,63 @@ class Game extends React.Component {
         }
         return winnerPlayer
     }
-    render() {
-        let status = "Next player: " + this.state.currentPlayer.name;
-        let gameResult = "";
 
-        if (this.state.isGameEnded || this.state.isWinnerDecided) {
-            if (this.state.isGameEnded) {
-                gameResult = "Match ends in draw.";
-            }
-            if (this.state.isWinnerDecided && this.state.winner) {
-                gameResult = "Winner: " + this.state.winner;
-            }
-            //status = ""
+    jumpTo(index) {
+        let jumpGamePlayerValue = 'O'
+
+        if (index % 2 === 0) {
+            jumpGamePlayerValue = 'X'
         }
+        if (this.state.currentPlayer.value != jumpGamePlayerValue) {
+            this.switchPlayer()
+        }
+        this.setState({ stepPointer: index })
+    }
+
+    render() {
+        let moves_html = ""
+        let winner = {}
+
+        let status = "Next player: " + this.state.currentPlayer.name;
+
+
+        let history = this.state.history[this.state.stepPointer]
+        let square = history.squares.slice()
+
+        if (this.isAllSquaresFilled(square)) {
+            status = "Match ends in draw.";
+        }
+
+        if (this.isWinnerDecided(square)) {
+            winner = this.getWinner(square)
+            status = "Winner: " + winner.name;
+        }
+
+        moves_html = this.state.history.map((square, index) => {
+            let desc = (index ? "Go to step " + (index) : "Go to start");
+            return (
+                <li key={index}>
+                    <button onClick={() => this.jumpTo(index)} >{desc}</button>
+                </li>
+            );
+        })
+
         return (
             <div className="game">
                 <div className="game-board">
-                    <Board currentPlayer={this.state.currentPlayer} isGameEnded={this.state.isGameEnded} isWinnerDecided={this.state.isWinnerDecided} winner={this.state.winner} squares={this.state.squares} onSquareClick={(i) => this.squareClick(i)} />
+                    <Board squares={square} onSquareClick={(i) => this.squareClick(i)} />
                 </div>
                 <div className="game-info">
                     <div>{status}</div>
-                    <div>{gameResult}</div>
-                    <button onClick={() => this.resetGame()}>Reset Game</button>
+                    <button onClick={() => this.resetGame()} className="hide">Reset Game</button>
+                    <div className="time-travel">
+                        <ol>{moves_html}</ol>
+                    </div>
                 </div>
                 <div className="author-info">
 
                 </div>
-                <div className="time-travel">
 
-                </div>
             </div>
         );
     }
