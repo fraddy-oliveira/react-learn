@@ -1,17 +1,19 @@
 import React from 'react';
 
 import Square from './Square.js';
-
-const range = (start, stop, step) =>
-  Array.from({length: (stop - start) / step + 1}, (_, i) => start + i * step);
+import {range} from '../lib/utilities.js';
 
 class Board extends React.Component {
-  renderSquare(i) {
+  /**
+   * Render square
+   * @param {number} boxIndex Index of Box.
+   */
+  renderSquare(boxIndex) {
     return (
       <Square
-        key={i}
-        box_value={this.props.squares[i]}
-        squareClick={() => this.props.onSquareClick(i)}
+        key={boxIndex}
+        box_value={this.props.squares[boxIndex]}
+        squareClick={() => this.props.onSquareClick(boxIndex)}
       />
     );
   }
@@ -22,10 +24,12 @@ class Board extends React.Component {
 
     return (
       <div>
-        {colsArray.map((col) => {
+        {rowsArray.map((row) => {
           return (
-            <div className="board-row" key={col}>
-              {rowsArray.map((row) => this.renderSquare(row - 1))}
+            <div className="board-row" key={row}>
+              {colsArray.map((col) => {
+                return this.renderSquare(col - 1 + (row - 1) * 3);
+              })}
             </div>
           );
         })}
